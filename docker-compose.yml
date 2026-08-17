@@ -1,0 +1,78 @@
+services:
+  qa-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: qa-agent
+    restart: unless-stopped
+    ports:
+      - "4000:3000"
+
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2
+      OLLAMA_EMBED_MODEL: nomic-embed-text
+      DATABASE_URL: postgresql://qa:qa_password@postgres:5432/qa_brain
+      REDIS_URL: redis://redis:6379
+      AUTOMATION_PROJECT_PATH: /app/automation
+
+    volumes:
+      - /Users/uchoudhary/Delivery/magnit/qa/pw-sanity:/app/automation
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+    networks:
+      - qa-ai-network
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: qa-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: qa_brain
+      POSTGRES_USER: qa
+      POSTGRES_PASSWORD: qa_password
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qa -d qa_brain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - qa-ai-network
+
+  redis:
+    image: redis:8-alpine
+    container_name: qa-redis
+    restart: unless-stopped
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - qa-ai-network
+
+networks:
+  qa-ai-network:
+    name: qa-ai-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: qa-postgres-data
+
+  redis_data:
+    name: qa-redis-data

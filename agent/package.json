@@ -1,0 +1,21 @@
+{
+  "name": "qa-agent",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "chat": "tsx src/chat.ts"
+  },
+  "dependencies": {
+    "pg": "^8.16.3",
+    "redis": "^5.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  }
+}

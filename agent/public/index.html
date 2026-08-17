@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testa — AI QA Engineer</title>
+  <style>
+    :root {
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --surface2:     #21262d;
+      --border:       #30363d;
+      --text:         #c9d1d9;
+      --muted:        #8b949e;
+      --accent:       #58a6ff;
+      --accent-dim:   #1f6feb;
+      --user-bg:      #1f6feb;
+      --green:        #3fb950;
+      --yellow:       #d29922;
+      --red:          #f85149;
+      --sidebar:      280px;
+      --radius:       8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    /* ---- SIDEBAR ---- */
+
+    .sidebar {
+      width: var(--sidebar);
+      min-width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .brand {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .status-indicator {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .status-dot.offline { background: var(--red); }
+
+    .section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: background 0.12s;
+      display: block;
+    }
+
+    .btn:hover { background: var(--border); }
+
+    .btn-primary {
+      background: var(--accent-dim);
+      border-color: var(--accent-dim);
+      color: #fff;
+      text-align: center;
+    }
+
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    .field {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 7px 10px;
+      font-family: inherit;
+      margin-bottom: 8px;
+      transition: border-color 0.12s;
+    }
+
+    .field:focus { outline: none; border-color: var(--accent-dim); }
+
+    textarea.field { resize: vertical; min-height: 72px; }
+
+    select.field { cursor: pointer; }
+
+    .memory-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      background: var(--accent-dim);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 12px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .memory-scroll {
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 8px;
+    }
+
+    .memory-scroll.open { display: block; }
+
+    .mem-item {
+      background: var(--surface2);
+      border-left: 2px solid var(--accent-dim);
+      border-radius: 4px;
+      padding: 6px 28px 6px 8px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      position: relative;
+      word-break: break-word;
+    }
+
+    .mem-item .mem-type {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .mem-del {
+      position: absolute;
+      top: 4px;
+      right: 5px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      padding: 2px 3px;
+      border-radius: 3px;
+    }
+
+    .mem-del:hover { color: var(--red); background: rgba(248,81,73,0.1); }
+
+    .footer-info {
+      padding: 10px 16px;
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ---- CHAT AREA ---- */
+
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 11px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .session-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: "SF Mono", Consolas, monospace;
+    }
+
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    .header-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .header-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+    }
+
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.testa { align-self: flex-start; align-items: flex-start; }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .msg-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .msg.user .msg-avatar { background: #484f58; }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg.user .bubble {
+      background: var(--user-bg);
+      border-bottom-right-radius: 3px;
+      color: #fff;
+    }
+
+    .msg.testa .bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 3px;
+    }
+
+    .bubble pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 8px 0 2px;
+      font-family: "SF Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    .bubble code {
+      background: rgba(110,118,129,0.2);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .bubble pre code { background: none; padding: 0; }
+
+    .mem-ctx { margin-top: 7px; }
+
+    .mem-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .mem-toggle:hover { background: var(--surface2); color: var(--text); }
+
+    .mem-pills {
+      display: none;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .mem-pills.open { display: flex; }
+
+    .pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 10px;
+      color: var(--muted);
+      max-width: 340px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pill .sim { color: var(--accent); font-weight: 600; }
+
+    /* thinking animation */
+    .thinking {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 6px 0;
+    }
+
+    .dots { display: flex; gap: 5px; }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      animation: bounce 1.1s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.18s; }
+    .dot:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ---- INPUT ---- */
+
+    .input-area {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .msg-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      padding: 10px 14px;
+      resize: none;
+      font-family: inherit;
+      min-height: 44px;
+      max-height: 160px;
+      line-height: 1.5;
+      transition: border-color 0.12s;
+    }
+
+    .msg-input:focus { outline: none; border-color: var(--accent-dim); }
+
+    .send-btn {
+      background: var(--accent-dim);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s;
+      height: 44px;
+    }
+
+    .send-btn:hover { background: var(--accent); }
+    .send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ---- TOAST ---- */
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: 13px;
+      z-index: 999;
+      animation: slideIn 0.18s ease;
+    }
+
+    .toast.ok  { border-color: var(--green); color: var(--green); }
+    .toast.err { border-color: var(--red);   color: var(--red);   }
+
+    @keyframes slideIn {
+      from { transform: translateX(16px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* scrollbars */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ---- Test generator code panel ---- */
+    .code-msg {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .code-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .code-toolbar span { flex: 1; }
+
+    .code-toolbar button {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      padding: 3px 9px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .code-toolbar button:hover { color: var(--text); border-color: var(--muted); }
+    .code-toolbar button.primary { border-color: var(--accent-dim); color: var(--accent); }
+    .code-toolbar button.primary:hover { background: var(--accent-dim); color: #fff; }
+
+    .code-pre {
+      padding: 14px;
+      overflow-x: auto;
+      font-family: "SF Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre;
+      color: var(--text);
+      max-height: 480px;
+      overflow-y: auto;
+    }
+
+    /* ---- Save modal ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 520px;
+      max-width: 95vw;
+    }
+
+    .modal h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .modal-actions button {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface2);
+      transition: background 0.12s;
+    }
+
+    .modal-actions button.save-btn {
+      background: var(--accent-dim);
+      border-color: var(--accent-dim);
+      color: #fff;
+    }
+
+    .modal-actions button.save-btn:hover { background: var(--accent); }
+    .modal-actions button:hover { background: var(--border); }
+
+    .modal .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .overwrite-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======== SIDEBAR ======== -->
+<div class="sidebar">
+
+  <div class="brand">
+    <div class="brand-icon">🤖</div>
+    <div class="brand-text">
+      <h1>Testa</h1>
+      <p>AI QA Engineer</p>
+    </div>
+    <div class="status-indicator">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-label">connecting…</span>
+    </div>
+  </div>
+
+  <!-- Session -->
+  <div class="section">
+    <div class="section-title">Session</div>
+    <button class="btn" style="margin-bottom:8px" onclick="newSession()">+ New Session</button>
+    <div style="font-size:11px;color:var(--muted)" id="session-info">—</div>
+  </div>
+
+  <!-- Teach -->
+  <div class="section">
+    <div class="section-title">Teach Testa</div>
+    <textarea class="field" id="teach-input"
+      placeholder="Enter product knowledge…&#10;e.g. The login page validates email format before the form is submitted."></textarea>
+    <select class="field" id="teach-type">
+      <option value="feature">Feature</option>
+      <option value="flow">User Flow</option>
+      <option value="edge-case">Edge Case</option>
+      <option value="architecture">Architecture</option>
+      <option value="fact">General Fact</option>
+      <option value="bug">Known Bug</option>
+    </select>
+    <button class="btn btn-primary" onclick="teachTesta()">Remember This</button>
+  </div>
+
+  <!-- Ingest document -->
+  <div class="section">
+    <div class="section-title">Ingest Document</div>
+    <textarea class="field" id="ingest-input" style="min-height:56px"
+      placeholder="Paste a spec, release note, or feature doc…"></textarea>
+    <select class="field" id="ingest-type">
+      <option value="fact">General Knowledge</option>
+      <option value="feature">Feature Spec</option>
+      <option value="flow">User Flows</option>
+      <option value="architecture">Architecture Doc</option>
+    </select>
+    <button class="btn" onclick="ingestDoc()">Ingest Document</button>
+  </div>
+
+  <!-- Test Generator -->
+  <div class="section">
+    <div class="section-title">🧪 Generate Test</div>
+    <textarea class="field" id="gen-feature" style="min-height:64px"
+      placeholder="Describe the feature or scenario to test…&#10;e.g. Login fails after 3 incorrect attempts and shows lockout message"></textarea>
+    <select class="field" id="gen-portal">
+      <option value="admin-client">Admin / Client Portal</option>
+      <option value="agency">Agency Portal</option>
+      <option value="client">Client Portal</option>
+      <option value="admin-agency">Admin / Agency Portal</option>
+    </select>
+    <input class="field" id="gen-area" type="text" placeholder="Feature area (e.g. booking, candidate, login)">
+    <button class="btn btn-primary" id="gen-btn" onclick="generateTest()">Generate Test</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px" id="gen-status"></div>
+  </div>
+
+  <!-- Analyze Results -->
+  <div class="section">
+    <div class="section-title">📊 Analyze Results</div>
+    <textarea class="field" id="results-input" style="min-height:80px;font-family:monospace;font-size:11px"
+      placeholder="Paste Playwright terminal output here…&#10;&#10;e.g. Running 5 tests using 2 workers&#10;  ✓  1 login.spec.ts&#10;  ✗  2 booking.spec.ts"></textarea>
+    <input class="field" id="results-filepath" type="text" style="font-size:12px;font-family:monospace"
+      placeholder="Test file path (optional, e.g. tests/e2e/booking.spec.ts)">
+    <button class="btn btn-primary" id="results-btn" onclick="analyzeResults()">Analyze Failures</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px" id="results-status"></div>
+  </div>
+
+  <!-- Review Test -->
+  <div class="section">
+    <div class="section-title">🔍 Review Test</div>
+    <input class="field" id="review-filepath" type="text" style="font-size:12px;font-family:monospace"
+      placeholder="File path (e.g. tests/e2e/booking.spec.ts)">
+    <button class="btn" id="review-load-btn" onclick="loadAndReview()" style="margin-bottom:8px">Load &amp; Review</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:-4px;margin-bottom:6px">— or paste code below —</div>
+    <textarea class="field" id="review-code" style="min-height:72px;font-family:monospace;font-size:11px"
+      placeholder="Paste test code here…"></textarea>
+    <button class="btn btn-primary" id="review-btn" onclick="reviewTest()">Review Code</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px" id="review-status"></div>
+  </div>
+
+  <!-- Memory browser -->
+  <div class="section">
+    <div class="section-title">Memory</div>
+    <div class="memory-stat">
+      <div class="badge" id="mem-count">—</div>
+      <span style="font-size:12px;color:var(--muted)">facts stored</span>
+    </div>
+    <button class="btn btn-sm" id="mem-browse-btn" onclick="toggleMemBrowser()">Browse Memory</button>
+    <div class="memory-scroll" id="mem-list"></div>
+  </div>
+
+  <div class="footer-info" id="model-info">model: —</div>
+</div>
+
+<!-- ======== CHAT ======== -->
+<div class="chat-area">
+
+  <div class="chat-header">
+    <span class="label">Chat</span>
+    <span class="session-pill" id="session-pill">—</span>
+    <div class="header-actions">
+      <button class="header-btn" onclick="clearSession()">Clear Session</button>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <!-- Welcome message -->
+    <div class="msg testa">
+      <div class="msg-meta">
+        <div class="msg-avatar">T</div>
+        <span>Testa</span>
+      </div>
+      <div class="bubble">
+Hello! I'm Testa, your AI QA engineer.
+
+I'm here to help you:
+• Understand your product's behaviour and edge cases
+• Identify test scenarios and quality risks
+• Write and review Playwright TypeScript automation tests
+
+Use the sidebar to teach me about your product, or ask me anything. I'll always tell you what I know vs. what I'm uncertain about, and I'll ask you clarifying questions when I need more information.
+
+What would you like to work on?</div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea
+        class="msg-input"
+        id="msg-input"
+        placeholder="Ask Testa anything, or describe a feature to test…"
+        rows="2"
+      ></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+    <div class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+  </div>
+
+</div>
+
+<!-- Save to project modal -->
+<div class="modal-overlay" id="save-modal">
+  <div class="modal">
+    <h2>💾 Save Test to Project</h2>
+    <label>File path (relative to automation project root)</label>
+    <input class="field" id="save-path" type="text" style="font-family:monospace;font-size:12px">
+    <div class="hint">Must start with <code>tests/</code> and end with <code>.spec.ts</code></div>
+    <div class="overwrite-row">
+      <input type="checkbox" id="save-overwrite">
+      <label for="save-overwrite" style="margin:0">Overwrite if file already exists</label>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeSaveModal()">Cancel</button>
+      <button class="save-btn" onclick="saveTest()">Save File</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  'use strict';
+
+  // ---- state ----
+  let sessionId = localStorage.getItem('testa-session') || null;
+  let memBrowserOpen = false;
+  let isSending = false;
+
+  // ---- init ----
+  async function init() {
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem('testa-session', sessionId);
+    }
+    updateSessionUI(sessionId);
+
+    try {
+      const data = await api('/health');
+      document.getElementById('status-dot').className = 'status-dot';
+      document.getElementById('status-label').textContent = 'online';
+      document.getElementById('model-info').textContent = 'model: ' + data.model;
+      updateMemCount(data.memories);
+    } catch {
+      document.getElementById('status-dot').className = 'status-dot offline';
+      document.getElementById('status-label').textContent = 'offline';
+    }
+  }
+
+  function updateSessionUI(id) {
+    const short = id.slice(0, 8) + '…';
+    document.getElementById('session-info').textContent = short;
+    document.getElementById('session-pill').textContent = short;
+  }
+
+  function updateMemCount(n) {
+    document.getElementById('mem-count').textContent = (n != null) ? n : '—';
+  }
+
+  // ---- API ----
+  async function api(path, opts) {
+    const res = await fetch(path, opts);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || res.statusText);
+    }
+    return res.json();
+  }
+
+  async function post(path, body) {
+    return api(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  async function del(path) {
+    return api(path, { method: 'DELETE' });
+  }
+
+  // ---- chat ----
+  async function sendMessage() {
+    if (isSending) return;
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    isSending = true;
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    appendMsg('user', text);
+    const thinking = appendThinking();
+
+    try {
+      const data = await post('/chat', { message: text, sessionId });
+      sessionId = data.sessionId;
+      localStorage.setItem('testa-session', sessionId);
+      updateSessionUI(sessionId);
+
+      thinking.remove();
+      appendMsg('testa', data.answer, data.memories || []);
+
+      // Refresh memory count
+      const health = await api('/health');
+      updateMemCount(health.memories);
+    } catch (err) {
+      thinking.remove();
+      appendMsg('testa', '❌ ' + err.message);
+    }
+
+    isSending = false;
+    document.getElementById('send-btn').disabled = false;
+    input.focus();
+  }
+
+  function appendMsg(role, content, memories) {
+    const wrap = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    if (role === 'testa') {
+      meta.innerHTML = '<div class="msg-avatar">T</div><span>Testa</span>';
+    } else {
+      meta.innerHTML = '<div class="msg-avatar" style="background:#484f58">U</div><span>You</span>';
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = formatContent(content);
+
+    div.appendChild(meta);
+    div.appendChild(bubble);
+
+    if (role === 'testa' && memories && memories.length > 0) {
+      const ctx = document.createElement('div');
+      ctx.className = 'mem-ctx';
+
+      const toggle = document.createElement('button');
+      toggle.className = 'mem-toggle';
+      toggle.textContent = '▶ ' + memories.length + ' memories used';
+
+      const pills = document.createElement('div');
+      pills.className = 'mem-pills';
+
+      for (const m of memories) {
+        const p = document.createElement('div');
+        p.className = 'pill';
+        const simPct = m.similarity != null
+          ? '<span class="sim">' + Math.round(m.similarity * 100) + '%</span> '
+          : '';
+        p.innerHTML = simPct + '[' + esc(m.type) + '] ' + esc(m.content);
+        p.title = m.content;
+        pills.appendChild(p);
+      }
+
+      toggle.onclick = () => {
+        const open = pills.classList.toggle('open');
+        toggle.textContent = (open ? '▼ ' : '▶ ') + memories.length + ' memories used';
+      };
+
+      ctx.appendChild(toggle);
+      ctx.appendChild(pills);
+      div.appendChild(ctx);
+    }
+
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+    return div;
+  }
+
+  function appendThinking() {
+    const wrap = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg testa';
+    div.innerHTML =
+      '<div class="msg-meta"><div class="msg-avatar">T</div><span>Testa</span></div>' +
+      '<div class="thinking"><div class="dots">' +
+      '<div class="dot"></div><div class="dot"></div><div class="dot"></div>' +
+      '</div>Thinking…</div>';
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+    return div;
+  }
+
+  function formatContent(text) {
+    // Code fences
+    text = text.replace(/```[\w]*\n([\s\S]*?)```/g, (_, code) =>
+      '<pre><code>' + esc(code.trim()) + '</code></pre>'
+    );
+    // Inline code
+    text = text.replace(/`([^`\n]+)`/g, '<code>' + '$1' + '</code>');
+    // Bold
+    text = text.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    // Lines
+    text = text.replace(/\n/g, '<br>');
+    return text;
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ---- session ----
+  function newSession() {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('testa-session', sessionId);
+    updateSessionUI(sessionId);
+    document.getElementById('messages').innerHTML = '';
+    appendMsg('testa', 'New session started. What would you like to work on?');
+  }
+
+  async function clearSession() {
+    try {
+      await post('/session/clear', { sessionId });
+      document.getElementById('messages').innerHTML = '';
+      appendMsg('testa', 'Session cleared. Ready to start fresh.');
+      toast('Session cleared', 'ok');
+    } catch (err) {
+      toast('Error: ' + err.message, 'err');
+    }
+  }
+
+  // ---- teach ----
+  async function teachTesta() {
+    const content = document.getElementById('teach-input').value.trim();
+    const type = document.getElementById('teach-type').value;
+    if (!content) { toast('Enter some knowledge first', 'err'); return; }
+
+    try {
+      await post('/memory', { content, type, source: 'user-teach' });
+      document.getElementById('teach-input').value = '';
+      toast('Remembered (' + type + ')', 'ok');
+
+      const health = await api('/health');
+      updateMemCount(health.memories);
+
+      if (memBrowserOpen) await loadMemList();
+    } catch (err) {
+      toast('Error: ' + err.message, 'err');
+    }
+  }
+
+  // ---- ingest ----
+  async function ingestDoc() {
+    const content = document.getElementById('ingest-input').value.trim();
+    const type = document.getElementById('ingest-type').value;
+    if (!content) { toast('Paste a document first', 'err'); return; }
+
+    toast('Ingesting…', 'ok');
+
+    try {
+      const data = await post('/ingest/text', {
+        content,
+        source: 'user-ingest',
+        type
+      });
+      document.getElementById('ingest-input').value = '';
+      toast('Ingested ' + data.chunks + ' chunks', 'ok');
+
+      const health = await api('/health');
+      updateMemCount(health.memories);
+      if (memBrowserOpen) await loadMemList();
+    } catch (err) {
+      toast('Error: ' + err.message, 'err');
+    }
+  }
+
+  // ---- memory browser ----
+  async function toggleMemBrowser() {
+    memBrowserOpen = !memBrowserOpen;
+    const list = document.getElementById('mem-list');
+    const btn  = document.getElementById('mem-browse-btn');
+
+    if (memBrowserOpen) {
+      list.classList.add('open');
+      btn.textContent = 'Hide Memory';
+      await loadMemList();
+    } else {
+      list.classList.remove('open');
+      btn.textContent = 'Browse Memory';
+    }
+  }
+
+  async function loadMemList() {
+    const list = document.getElementById('mem-list');
+    list.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px 0">Loading…</div>';
+
+    try {
+      const data = await api('/memory?limit=40');
+
+      if (!data.memories.length) {
+        list.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px 0">No memories yet.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      for (const m of data.memories) {
+        const item = document.createElement('div');
+        item.className = 'mem-item';
+        item.innerHTML =
+          '<div class="mem-type">' + esc(m.memoryType || m.type) + '</div>' +
+          '<div>' + esc((m.content || '').slice(0, 120)) + (m.content && m.content.length > 120 ? '…' : '') + '</div>' +
+          '<button class="mem-del" title="Delete" onclick="deleteMem(\'' + m.id + '\')">✕</button>';
+        list.appendChild(item);
+      }
+    } catch (err) {
+      list.innerHTML = '<div style="font-size:11px;color:var(--red)">' + esc(err.message) + '</div>';
+    }
+  }
+
+  async function deleteMem(id) {
+    try {
+      await del('/memory/' + id);
+      toast('Memory deleted', 'ok');
+      await loadMemList();
+      const health = await api('/health');
+      updateMemCount(health.memories);
+    } catch (err) {
+      toast('Error: ' + err.message, 'err');
+    }
+  }
+
+  // ---- toast ----
+  function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = 'toast ' + (type || 'ok');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+  }
+
+  // ---- keyboard / input ----
+  document.getElementById('msg-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  document.getElementById('msg-input').addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+  });
+
+  // ---- test generator ----
+
+  let lastGeneratedCode = '';
+  let lastSuggestedPath = '';
+
+  async function generateTest() {
+    const feature    = document.getElementById('gen-feature').value.trim();
+    const portal     = document.getElementById('gen-portal').value;
+    const featureArea = document.getElementById('gen-area').value.trim() || 'general';
+
+    if (!feature) { toast('Describe the feature to test first', 'err'); return; }
+
+    const btn    = document.getElementById('gen-btn');
+    const status = document.getElementById('gen-status');
+    btn.disabled = true;
+    status.textContent = 'Generating…';
+
+    // Show thinking indicator in chat
+    const thinking = appendThinking();
+
+    try {
+      const data = await post('/test/generate', { feature, portal, featureArea });
+
+      lastGeneratedCode = data.testCode;
+      lastSuggestedPath = data.suggestedPath;
+
+      thinking.remove();
+
+      // Append a special test-code message to the chat
+      appendTestMessage(feature, data.testCode, data.suggestedPath, data.memoriesUsed);
+
+      status.textContent = 'Generated ✓';
+      document.getElementById('gen-feature').value = '';
+      document.getElementById('gen-area').value = '';
+    } catch (err) {
+      thinking.remove();
+      appendMsg('testa', '❌ Generation failed: ' + err.message);
+      status.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+  }
+
+  function appendTestMessage(feature, code, suggestedPath, memoriesUsed) {
+    const wrap = document.getElementById('messages');
+    const div  = document.createElement('div');
+    div.className = 'msg testa';
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.innerHTML = '<div class="msg-avatar">T</div><span>Testa — Test Generator</span>';
+
+    const intro = document.createElement('div');
+    intro.className = 'bubble';
+    intro.innerHTML =
+      'Here is a Playwright test for: <strong>' + esc(feature) + '</strong><br>' +
+      '<span style="font-size:11px;color:var(--muted)">Based on ' + memoriesUsed + ' memories · ' +
+      'Suggested path: <code>' + esc(suggestedPath) + '</code></span>';
+
+    // Code block with toolbar
+    const codeMsg = document.createElement('div');
+    codeMsg.className = 'code-msg';
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'code-toolbar';
+    toolbar.innerHTML =
+      '<span>' + esc(suggestedPath) + '</span>' +
+      '<button onclick="copyCode(this)">📋 Copy</button>' +
+      '<button class="primary" onclick="openSaveModal()">💾 Save to Project</button>';
+
+    const pre = document.createElement('pre');
+    pre.className = 'code-pre';
+    pre.textContent = code;
+
+    codeMsg.appendChild(toolbar);
+    codeMsg.appendChild(pre);
+
+    div.appendChild(meta);
+    div.appendChild(intro);
+    div.appendChild(codeMsg);
+
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function copyCode(btn) {
+    navigator.clipboard.writeText(lastGeneratedCode).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+  }
+
+  // ---- save modal ----
+
+  function openSaveModal() {
+    document.getElementById('save-path').value = lastSuggestedPath;
+    document.getElementById('save-overwrite').checked = false;
+    document.getElementById('save-modal').classList.add('open');
+  }
+
+  function closeSaveModal() {
+    document.getElementById('save-modal').classList.remove('open');
+  }
+
+  async function saveTest() {
+    const filePath  = document.getElementById('save-path').value.trim();
+    const overwrite = document.getElementById('save-overwrite').checked;
+
+    if (!filePath) { toast('Enter a file path', 'err'); return; }
+    if (!lastGeneratedCode) { toast('No generated code to save', 'err'); return; }
+
+    try {
+      const data = await post('/automation/write', {
+        filePath,
+        content: lastGeneratedCode,
+        overwrite
+      });
+
+      closeSaveModal();
+
+      const existed = data.alreadyExisted ? ' (overwrote existing file)' : '';
+      toast('Saved to ' + data.filePath + existed, 'ok');
+
+      // Post a confirmation message in chat
+      appendMsg('testa',
+        '✓ Test saved to the automation project:\n' + data.filePath +
+        '\n\nTo run it:\ncd /path/to/pw-sanity\nnpx playwright test ' + data.filePath
+      );
+    } catch (err) {
+      toast('Save failed: ' + err.message, 'err');
+    }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('save-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSaveModal();
+  });
+
+  // ---- analyze results ----
+
+  async function analyzeResults() {
+    const output   = document.getElementById('results-input').value.trim();
+    const filePath = document.getElementById('results-filepath').value.trim();
+
+    if (!output) { toast('Paste Playwright output first', 'err'); return; }
+
+    const btn    = document.getElementById('results-btn');
+    const status = document.getElementById('results-status');
+    btn.disabled = true;
+    status.textContent = 'Analyzing…';
+
+    const thinking = appendThinking();
+
+    try {
+      const body = { output };
+      if (filePath) body.filePath = filePath;
+
+      const data = await post('/test/analyze-results', body);
+      thinking.remove();
+
+      appendAnalysisMessage(data.analysis, data.memoriesUsed, filePath);
+
+      status.textContent = 'Done ✓';
+      document.getElementById('results-input').value = '';
+      document.getElementById('results-filepath').value = '';
+    } catch (err) {
+      thinking.remove();
+      appendMsg('testa', '❌ Analysis failed: ' + err.message);
+      status.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+  }
+
+  function appendAnalysisMessage(analysis, memoriesUsed, filePath) {
+    const wrap = document.getElementById('messages');
+    const div  = document.createElement('div');
+    div.className = 'msg testa';
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.innerHTML = '<div class="msg-avatar">T</div><span>Testa — Test Analysis</span>';
+
+    const intro = document.createElement('div');
+    intro.className = 'bubble';
+    intro.innerHTML = formatContent(analysis) +
+      '<br><span style="font-size:11px;color:var(--muted)">' +
+      (filePath ? 'File: <code>' + esc(filePath) + '</code> · ' : '') +
+      'Based on ' + memoriesUsed + ' memories</span>';
+
+    div.appendChild(meta);
+    div.appendChild(intro);
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  // ---- review test ----
+
+  async function loadAndReview() {
+    const filePath = document.getElementById('review-filepath').value.trim();
+    if (!filePath) { toast('Enter a file path', 'err'); return; }
+
+    const btn = document.getElementById('review-load-btn');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    try {
+      const encoded = encodeURIComponent(filePath);
+      const res = await fetch('/automation/file/' + encoded);
+      if (!res.ok) throw new Error('File not found: ' + filePath);
+      const code = await res.text();
+      document.getElementById('review-code').value = code;
+      toast('Loaded ' + filePath, 'ok');
+    } catch (err) {
+      toast('Load failed: ' + err.message, 'err');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Load & Review';
+  }
+
+  async function reviewTest() {
+    const code = document.getElementById('review-code').value.trim();
+    if (!code) { toast('Load a file or paste test code first', 'err'); return; }
+
+    const btn    = document.getElementById('review-btn');
+    const status = document.getElementById('review-status');
+    btn.disabled = true;
+    status.textContent = 'Reviewing…';
+
+    const thinking = appendThinking();
+
+    try {
+      const data = await post('/test/review', { code });
+      thinking.remove();
+      appendMsg('testa', data.review);
+      status.textContent = 'Done ✓';
+    } catch (err) {
+      thinking.remove();
+      appendMsg('testa', '❌ Review failed: ' + err.message);
+      status.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+  }
+
+  // ---- boot ----
+  init();
+</script>
+</body>
+</html>
